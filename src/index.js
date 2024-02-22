@@ -1,8 +1,11 @@
 import Notiflix from 'notiflix';
+// Dodatkowy import stylów
+import 'simplelightbox/dist/simple-lightbox.min.css';
 
 const form = document.querySelector('.search-form');
 const galerySection = document.querySelector('.gallery');
 let perPageItems = 5;
+
 const searchParams = new URLSearchParams({
   key: '18941965-072e6ae370689f800c64fac36',
   q: null,
@@ -15,16 +18,30 @@ const searchParams = new URLSearchParams({
 
 form.addEventListener('submit', e => {
   e.preventDefault();
+  const checkBtn = document.querySelector('.load-more');
+  if (checkBtn) {
+    checkBtn.remove();
+  }
+
+  perPageItems = 5;
 
   const searchQuery = form.querySelector('input[name="searchQuery"]').value;
 
   searchParams.set('q', searchQuery);
+  searchParams.set('per_page', perPageItems);
   const URL = `https://pixabay.com/api/?${searchParams}`;
 
   fetch(URL)
     .then(response => response.json())
     .then(posts => renderPosts(posts))
     .catch(error => console.log(error));
+  const lightbox = new SimpleLightbox('.photo-card a', {
+    captions: true,
+    captionSelector: 'img',
+    captionType: 'attr',
+    captionsData: 'alt',
+    captionDelay: 250,
+  });
 });
 
 const renderPosts = posts => {
@@ -37,7 +54,8 @@ const renderPosts = posts => {
     Notiflix.Notify.success(`Hooray! We found ${perPageItems} images.`);
     posts.hits.map(val => {
       const html = `<div class="photo-card">
-      <img src="${val.largeImageURL}" alt="${val.tags}" loading="lazy" />
+      <a href="${val.largeImageURL}">
+      <img src="${val.webformatURL}" alt="${val.tags}" loading="lazy" /></a>
       <div class="info">
         <p class="info-item">
           <b>Likes:</b>
@@ -61,15 +79,21 @@ const renderPosts = posts => {
 
       galerySection.insertAdjacentHTML('afterbegin', html);
     });
+
     const loadMore = `<button type="button" class="load-more">Load more</button>`;
-
     galerySection.insertAdjacentHTML('afterend', loadMore);
-    const loadMoreBtn = document.querySelector('.load-more');
 
+    const loadMoreBtn = document.querySelector('.load-more');
     loadMoreBtn.addEventListener('click', e => {
-      e.preventDefault();
-      console.log(e.target);
-      searchParams.set('per_page', perPageItems + 10);
+      perPageItems += 5;
+      searchParams.set('per_page', perPageItems);
+      const URL = `https://pixabay.com/api/?${searchParams}`;
+      fetch(URL)
+        .then(response => response.json())
+        .then(posts => renderPosts(posts))
+        .catch(error => console.log(error));
+      loadMoreBtn.remove();
+      lightbox.refresh();
     });
   }
 };

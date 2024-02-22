@@ -34,3 +34,12 @@ header {
   display: flex;
   justify-content: space-evenly;
 }
+section {
+  display: flex;
+  flex-direction: column;
+  align-content: center;
+}
+.load-more {
+  font-size: 30px;
+  padding: 10px;
+}
