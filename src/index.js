@@ -1,10 +1,14 @@
 import Notiflix from 'notiflix';
 // Dodatkowy import stylów
+import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 
 const form = document.querySelector('.search-form');
 const galerySection = document.querySelector('.gallery');
-let perPageItems = 5;
+let searchQuery;
+let perPageItems = 40;
+let pageSet = 1;
+console.log('asdaas');
 
 const searchParams = new URLSearchParams({
   key: '18941965-072e6ae370689f800c64fac36',
@@ -13,7 +17,7 @@ const searchParams = new URLSearchParams({
   orientation: 'horizontal',
   safesearch: true,
   per_page: perPageItems,
-  page: 1,
+  page: pageSet,
 });
 
 form.addEventListener('submit', e => {
@@ -23,9 +27,9 @@ form.addEventListener('submit', e => {
     checkBtn.remove();
   }
 
-  perPageItems = 5;
+  // perPageItems = 5;
 
-  const searchQuery = form.querySelector('input[name="searchQuery"]').value;
+  searchQuery = form.querySelector('input[name="searchQuery"]').value;
 
   searchParams.set('q', searchQuery);
   searchParams.set('per_page', perPageItems);
@@ -35,18 +39,11 @@ form.addEventListener('submit', e => {
     .then(response => response.json())
     .then(posts => renderPosts(posts))
     .catch(error => console.log(error));
-  const lightbox = new SimpleLightbox('.photo-card a', {
-    captions: true,
-    captionSelector: 'img',
-    captionType: 'attr',
-    captionsData: 'alt',
-    captionDelay: 250,
-  });
 });
 
 const renderPosts = posts => {
   galerySection.innerHTML = ``;
-  if (posts.total === 0) {
+  if (posts.total === 0 || searchQuery === '') {
     Notiflix.Notify.failure(
       'Sorry, there are no images matching your search query. Please try again.'
     );
@@ -85,8 +82,9 @@ const renderPosts = posts => {
 
     const loadMoreBtn = document.querySelector('.load-more');
     loadMoreBtn.addEventListener('click', e => {
-      perPageItems += 5;
+      perPageItems += 40;
       searchParams.set('per_page', perPageItems);
+      searchParams.set('page', (pageSet += 1));
       const URL = `https://pixabay.com/api/?${searchParams}`;
       fetch(URL)
         .then(response => response.json())
@@ -94,6 +92,14 @@ const renderPosts = posts => {
         .catch(error => console.log(error));
       loadMoreBtn.remove();
       lightbox.refresh();
+    });
+
+    const lightbox = new SimpleLightbox('.photo-card a', {
+      captions: true,
+      captionSelector: 'img',
+      captionType: 'attr',
+      captionsData: 'alt',
+      captionDelay: 250,
     });
   }
 };
