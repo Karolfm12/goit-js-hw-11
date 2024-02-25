@@ -6,9 +6,9 @@ import 'simplelightbox/dist/simple-lightbox.min.css';
 const form = document.querySelector('.search-form');
 const galerySection = document.querySelector('.gallery');
 let searchQuery;
-let perPageItems = 40;
-let pageSet = 1;
-console.log('asdaas');
+let perPageItems;
+let pageSet;
+// console.log('asdaas');
 
 const searchParams = new URLSearchParams({
   key: '18941965-072e6ae370689f800c64fac36',
@@ -27,18 +27,35 @@ form.addEventListener('submit', e => {
     checkBtn.remove();
   }
 
-  // perPageItems = 5;
-
   searchQuery = form.querySelector('input[name="searchQuery"]').value;
 
-  searchParams.set('q', searchQuery);
-  searchParams.set('per_page', perPageItems);
-  const URL = `https://pixabay.com/api/?${searchParams}`;
+  if (searchQuery.trim() !== '') {
+    perPageItems = 40;
+    pageSet = 1;
+    searchParams.set('q', searchQuery);
+    searchParams.set('per_page', perPageItems);
+    searchParams.set('page', pageSet);
 
-  fetch(URL)
-    .then(response => response.json())
-    .then(posts => renderPosts(posts))
-    .catch(error => console.log(error));
+    const URL = `https://pixabay.com/api/?${searchParams}`;
+
+    fetch(URL)
+      .then(response => response.json())
+      .then(posts => renderPosts(posts))
+      .catch(error => {
+        Notiflix.Notify.failure(
+          'Sorry, there are no images matching your search query. Please try again.'
+        );
+        // console.log(error);
+      });
+  } else {
+    galerySection.innerHTML = ``;
+    perPageItems = 0;
+    pageSet = 0;
+    searchParams.set('q', searchQuery);
+    searchParams.set('per_page', perPageItems);
+    searchParams.set('page', pageSet);
+    Notiflix.Notify.failure('Please enter a search query.');
+  }
 });
 
 const renderPosts = posts => {
@@ -48,7 +65,7 @@ const renderPosts = posts => {
       'Sorry, there are no images matching your search query. Please try again.'
     );
   } else {
-    Notiflix.Notify.success(`Hooray! We found ${perPageItems} images.`);
+    Notiflix.Notify.success(`Hooray! We found ${posts.totalHits} images.`);
     posts.hits.map(val => {
       const html = `<div class="photo-card">
       <a href="${val.largeImageURL}">
